@@ -13,5 +13,10 @@ void setup()
 void loop()
 {
   int distance = sensor.getDistance();
-  Serial.println(distance);
+
+  if (distance < 40)
+  {
+    Serial.println("isWithinThreshhold");
+  }
+  delay(100);
 }
