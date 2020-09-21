@@ -41,6 +41,8 @@ void draw() {
     placementIndicatorOffsetX = 0;
   }
   /* END - Create and animate placementIndicator */
+  bug(100, 100, 2);
+
 
   /* if ( arduinoPort.available() > 0)  {
     String rec = arduinoPort.readStringUntil('\n');
@@ -53,6 +55,26 @@ void draw() {
       cameIntoThreshhold = true;
     }
   }*/
+}
+
+void bug(float x, float y, float scale) {
+  ArrayList<PShape> legs = new ArrayList<PShape>();
+
+  polygon(x, y, 40 * scale, 6);
+
+  PShape leftUpperLeg = createShape(TRIANGLE, x - 40 * scale, y - 40 * scale, x * scale - 20, y, x - 20 * scale, y);
+  legs.add(leftUpperLeg);
+  PShape leftLowerLeg = createShape(TRIANGLE, x - 40 * scale, y + 40 * scale, x * scale - 20, y, x - 20 * scale, y);
+  legs.add(leftLowerLeg);
+  PShape rightUpperLeg = createShape(TRIANGLE, x + 40 * scale, y - 40 * scale, x * scale + 20, y, x + 20 * scale, y);
+  legs.add(rightUpperLeg);
+  PShape rightLowerLeg = createShape(TRIANGLE, x + 40 * scale, y + 40 * scale, x * scale + 20, y, x + 20 * scale, y);
+  legs.add(rightLowerLeg);
+
+  for (int i = 0; i < legs.size(); i++) {
+    legs.get(i).setFill(color(255));
+    shape(legs.get(i));
+  }
 }
 
 void placementIndicator(float polygonRadius, int npoints, float offsetX) {
