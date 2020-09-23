@@ -5,18 +5,29 @@ String receivedMessage;
 boolean cameIntoThreshhold = false;
 
 PShape branch;
+PShape leftWing;
+PShape rightWing;
+float velocity = 6;
 float backgroundOffset = 0;
 float placementIndicatorOffsetX = 0;
 int placementIndicatorAnimationCounter = 0;
 String placementIndicatorAnimationDirection = "right";
+float cocoonOpenDegrees = 0;
+String cocoonAnimationDirection = "close";
+boolean cocoonAnimationFinished = false;
+float wingOpacity = 0;
+float treeOffset = 0;
 
 void setup() {
   /* Set up screen */
   fullScreen();
   background(0);
 
+
   /* Load external files */
   branch = loadShape("branch.svg");
+  leftWing = loadShape("leftwing.svg");
+  rightWing = loadShape("rightwing.svg");
 
   /* Set up communication with arduino
   String portName = Serial.list()[Serial.list().length - 1]; //change index to match your port
@@ -26,7 +37,8 @@ void setup() {
 void draw() {
   background(255);
   translate(0, backgroundOffset);
-  backgroundOffset+= 4;
+  backgroundOffset = backgroundOffset + velocity;
+  println(backgroundOffset);
 
   /* if ( arduinoPort.available() > 0)  {
     String rec = arduinoPort.readStringUntil('\n');
@@ -69,23 +81,45 @@ void draw() {
   bug(width - 400, -300, 1);
   /* END - Scene 1 Bugs going by */
 
+
   if (backgroundOffset < 2450) {
     /* START - Scene 2 Crawling on branch */
-    println("Under threshhold");
     shape(branch, 0, -3200, width, width);
     /* END - Scene 2 Crawling on branch */
   }
-  if (backgroundOffset > 2450 && backgroundOffset < 5000) {
-    /* START - Scene 3 Cocooning */
-    // 1. Place tree at initial position minus delta (Offset at entering threshhold to current threshhold)
-    shape(branch, 0, -3200 - (backgroundOffset - 2450), width, width);
-    // 2. Start cocoon animation
+  if (backgroundOffset > 2450 && backgroundOffset < 4400) {
+    if (cocoonAnimationFinished == false) {
+      if (cocoonAnimationDirection == "close" && cocoonOpenDegrees < 165) {
+        cocoonOpenDegrees++;
+      } else if (cocoonAnimationDirection == "close" && cocoonOpenDegrees >= 165) {
+        cocoonOpenDegrees = 165;
+        cocoonAnimationDirection = "open";
+      } if (cocoonAnimationDirection == "open" && cocoonOpenDegrees > 0) {
+        cocoonOpenDegrees--;
+      } if (cocoonAnimationDirection == "open" && cocoonOpenDegrees <= 0) {
+        cocoonOpenDegrees = 0;
+        cocoonAnimationFinished = true;
+      }
 
-    // 3. Keep cocoon for x amount of time
+      fill(0);
+      noStroke();
+      arc(width / 2, -1900 - (backgroundOffset - 2450), 300, 700, radians(260 - cocoonOpenDegrees), radians(280 + cocoonOpenDegrees), PIE);
+
+      print("Tree position: ");
+      shape(branch, 0, -3200 - (backgroundOffset - 2450), width, width);
+    }
+
+    // 3. Let tree move again
     /* END - Scene 3 Cocooning */
-  } else if (backgroundOffset > 5000) {
+  } else if (backgroundOffset > 4400) {
+    shape(branch, 0, -3200 - (backgroundOffset - 2450) + treeOffset, width, width);
+    treeOffset = treeOffset + velocity;
     /* START - Scene 4 Butterfly */
-    println("Over threshhold");
+    shape(leftWing, width / 2 - 540, (height / 2 - 500 * 0.8) - backgroundOffset, 500, 500 * 1.5);
+    shape(rightWing, width / 2 + 40, (height / 2 - 500 * 0.8) - backgroundOffset, 500, 500 * 1.5);
+
+    // 4. Fly and move tree downwards again
+
     /* END - Scene 4 Butterfly */
   }
 }
