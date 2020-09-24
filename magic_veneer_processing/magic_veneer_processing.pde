@@ -64,8 +64,8 @@ void draw() {
   }*/
 
   // Set up fill and let background move
-  background(255);
-  translate(0, backgroundOffset);
+  background(0);
+  translate(0, backgroundOffset - 100);
 
   // TODO: Only start to move background as soon as second sensor is triggered
   backgroundOffset = backgroundOffset + velocity;
@@ -79,7 +79,7 @@ void draw() {
 
   /* START - Create and animate placementIndicator */
   // TODO: Trigger when first sensor is actuated
-  placementIndicator(width / 2, (height / 2) - backgroundOffset ,80, 8, placementIndicatorOffsetX);
+  placementIndicator(width / 2+ 150, (height / 2) - backgroundOffset ,130, 8, placementIndicatorOffsetX);
 
   if (placementIndicatorAnimationCounter < 5) {
     if (placementIndicatorAnimationDirection == "right" && placementIndicatorOffsetX < 30) {
@@ -126,9 +126,9 @@ void draw() {
         cocoonAnimationFinished = true;
       }
 
-      fill(0);
+      fill(255);
       noStroke();
-      arc(width / 2, -1900 - (backgroundOffset - 2450), 300, 700, radians(260 - cocoonOpenDegrees), radians(280 + cocoonOpenDegrees), PIE);
+      arc(width / 2 + 150, -1800 - (backgroundOffset - 2450), 500, 1100, radians(260 - cocoonOpenDegrees), radians(280 + cocoonOpenDegrees), PIE);
 
       print("Tree position: ");
       shape(branch, 0, -3200 - (backgroundOffset - 2450), width, width);
@@ -141,32 +141,33 @@ void draw() {
     treeOffset = treeOffset + velocity;
     /* START - Scene 4 Butterfly */
 
-    if (wingWidth < 500 && wingsSpread == false) {
+    if (wingWidth < 620 && wingsSpread == false) {
       wingDirection = "bigger";
-    } else if (wingWidth >= 500 && wingsSpread == false)  {
-      wingWidth = 500;
+    } else if (wingWidth >= 620 && wingsSpread == false)  {
+      wingWidth = 620;
       wingsSpread = true;
-    } else if (wingsSpread == true && wingWidth < 450) {
+    } else if (wingsSpread == true && wingWidth < 540) {
       wingDirection = "bigger";
-    } else if (wingsSpread == true && wingWidth >= 500) {
+    } else if (wingsSpread == true && wingWidth >= 620) {
       wingDirection = "smaller";
     }
 
     if (wingDirection == "smaller") {
-      wingWidth -= 3;
+      wingWidth -= 4;
     } else if (wingDirection == "bigger") {
-      wingWidth += 3;
+      wingWidth += 4;
     }
 
-    shape(leftWing, width / 2 - wingWidth - 20, (height / 2 - wingWidth * 0.8) - backgroundOffset, wingWidth, wingWidth * 1.5);
-    shape(rightWing, width / 2 + 20, (height / 2 - wingWidth * 0.8) - backgroundOffset, wingWidth, wingWidth * 1.5);
+    shape(leftWing, width / 2 - wingWidth + 85, (height / 2 - wingWidth * 0.8) - backgroundOffset, wingWidth, wingWidth * 1.5);
+    shape(rightWing, width / 2 + 215, (height / 2 - wingWidth * 0.8) - backgroundOffset, wingWidth, wingWidth * 1.5);
 
 
     /* END - Scene 4 Butterfly */
   } else if (backgroundOffset > 13000) {
-    background(0);
+    background(255);
   }
 }
+
 
 void bug(float x, float y, float scale) {
   PShape leftUpperLeg = bugLeg(scale, false);
@@ -230,8 +231,8 @@ void polygon(float x, float y, float radius, int npoints) {
     float sy = y + sin(a) * radius;
     vertex(sx, sy);
   }
-  fill(0);
-  stroke(0);
+  fill(255);
+  stroke(255);
   endShape(CLOSE);
 }
 
@@ -256,8 +257,8 @@ void head(float x, float y, float polygonRadius, int npoints) {
 
 PShape antenna(float scale) {
   PShape antenna = createShape(RECT, 0, 0, 5 * scale, 25 * scale);
-  antenna.setFill(color(0));
-  antenna.setStroke(color(0));
+  antenna.setFill(color(255));
+  antenna.setStroke(color(255));
   antenna.endShape();
 
   return antenna;
@@ -266,8 +267,8 @@ PShape antenna(float scale) {
 PShape bugLeg(float scale, boolean mirrored) {
   PShape bugLeg = createShape();
   bugLeg.beginShape();
-  bugLeg.fill(0);
-  bugLeg.stroke(0);
+  bugLeg.fill(255);
+  bugLeg.stroke(255);
 
   if (mirrored == true) {
     bugLeg.vertex(0, 20);

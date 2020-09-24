@@ -22,14 +22,46 @@ Serial arduinoPort;
 String receivedMessage;
 boolean cameIntoThreshhold = false;
 
+PShape branch;
+PShape leftWing;
+PShape rightWing;
+ArrayList<PShape> flyOverObjects = new ArrayList<PShape>();
+float velocity = 6;
+float backgroundOffset = 0;
 float placementIndicatorOffsetX = 0;
 int placementIndicatorAnimationCounter = 0;
 String placementIndicatorAnimationDirection = "right";
+float cocoonOpenDegrees = 0;
+String cocoonAnimationDirection = "close";
+boolean cocoonAnimationFinished = false;
+float wingOpacity = 0;
+float treeOffset = 0;
+float wingWidth = 100;
+boolean wingsSpread = false;
+String wingDirection = "smaller";
 
 public void setup() {
   /* Set up screen */
   
   background(0);
+
+
+  /* Load external files */
+  branch = loadShape("branch.svg");
+  leftWing = loadShape("leftwing.svg");
+  rightWing = loadShape("rightwing.svg");
+
+  /* Spawn random objects the butterfly can fly over */
+  for (int i = 0; i < 40; i++) {
+    float x = random(5, width / 10 - 5) * 10;
+    float y = random(4800, 12000);
+    float radius = random(1, 10) * 25;
+    PShape object = createShape(ELLIPSE, x, -y, radius, radius);
+    object.setFill(color(150, 150, 150));
+    object.setStroke(color(150, 150, 150));
+    flyOverObjects.add(object);
+  }
+
 
   /* Set up communication with arduino
   String portName = Serial.list()[Serial.list().length - 1]; //change index to match your port
@@ -37,9 +69,35 @@ public void setup() {
 }
 
 public void draw() {
-  /* START - Create and animate placementIndicator */
+  /* if ( arduinoPort.available() > 0)  {
+    String rec = arduinoPort.readStringUntil('\n');
+    if (rec != null) {
+      receivedMessage = rec;
+    }
+
+    // Check for specific events and act upon them
+    if (receivedMessage != null && receivedMessage.contains("isWithinThreshhold")) {
+      cameIntoThreshhold = true;
+    }
+  }*/
+
+  // Set up fill and let background move
   background(0);
-  placementIndicator(80, 8, placementIndicatorOffsetX);
+  translate(0, backgroundOffset - 100);
+
+  // TODO: Only start to move background as soon as second sensor is triggered
+  backgroundOffset = backgroundOffset + velocity;
+  println(backgroundOffset);
+
+  // Draw fly-over objects
+  for (int i = 0; i < flyOverObjects.size(); i++) {
+    PShape object = flyOverObjects.get(i);
+    shape(object);
+  }
+
+  /* START - Create and animate placementIndicator */
+  // TODO: Trigger when first sensor is actuated
+  placementIndicator(width / 2 + 100, (height / 2) - backgroundOffset ,130, 8, placementIndicatorOffsetX);
 
   if (placementIndicatorAnimationCounter < 5) {
     if (placementIndicatorAnimationDirection == "right" && placementIndicatorOffsetX < 30) {
@@ -60,32 +118,127 @@ public void draw() {
   }
   /* END - Create and animate placementIndicator */
 
-  /* if ( arduinoPort.available() > 0)  {
-    String rec = arduinoPort.readStringUntil('\n');
-    if (rec != null) {
-      receivedMessage = rec;
+  /* START - Scene 1 Bugs going by */
+  bug(100, -100, 1);
+  bug(400, -400, 1);
+  bug(width - 200, -600, 1);
+  bug(width - 400, -300, 1);
+  /* END - Scene 1 Bugs going by */
+
+
+  if (backgroundOffset < 2450) {
+    /* START - Scene 2 Crawling on branch */
+    shape(branch, 0, -3200, width, width);
+    /* END - Scene 2 Crawling on branch */
+  } else if (backgroundOffset > 2450 && backgroundOffset < 4400) {
+    if (cocoonAnimationFinished == false) {
+      if (cocoonAnimationDirection == "close" && cocoonOpenDegrees < 165) {
+        cocoonOpenDegrees++;
+      } else if (cocoonAnimationDirection == "close" && cocoonOpenDegrees >= 165) {
+        cocoonOpenDegrees = 165;
+        cocoonAnimationDirection = "open";
+      } if (cocoonAnimationDirection == "open" && cocoonOpenDegrees > 0) {
+        cocoonOpenDegrees--;
+      } if (cocoonAnimationDirection == "open" && cocoonOpenDegrees <= 0) {
+        cocoonOpenDegrees = 0;
+        cocoonAnimationFinished = true;
+      }
+
+      fill(255);
+      noStroke();
+      arc(width / 2 + 100, -1800 - (backgroundOffset - 2450), 500, 1100, radians(260 - cocoonOpenDegrees), radians(280 + cocoonOpenDegrees), PIE);
+
+      print("Tree position: ");
+      shape(branch, 0, -3200 - (backgroundOffset - 2450), width, width);
     }
 
-    // Check for specific events and act upon them
-    if (receivedMessage != null && receivedMessage.contains("isWithinThreshhold")) {
-      cameIntoThreshhold = true;
+    // 3. Let tree move again
+    /* END - Scene 3 Cocooning */
+  } else if (backgroundOffset > 4400 && backgroundOffset < 13000) {
+    shape(branch, 0, -3200 - (backgroundOffset - 2450) + treeOffset, width, width);
+    treeOffset = treeOffset + velocity;
+    /* START - Scene 4 Butterfly */
+
+    if (wingWidth < 620 && wingsSpread == false) {
+      wingDirection = "bigger";
+    } else if (wingWidth >= 620 && wingsSpread == false)  {
+      wingWidth = 620;
+      wingsSpread = true;
+    } else if (wingsSpread == true && wingWidth < 540) {
+      wingDirection = "bigger";
+    } else if (wingsSpread == true && wingWidth >= 620) {
+      wingDirection = "smaller";
     }
+
+    if (wingDirection == "smaller") {
+      wingWidth -= 4;
+    } else if (wingDirection == "bigger") {
+      wingWidth += 4;
+    }
+
+    shape(leftWing, width / 2 - wingWidth + 35, (height / 2 - wingWidth * 0.8f) - backgroundOffset, wingWidth, wingWidth * 1.5f);
+    shape(rightWing, width / 2 + 165, (height / 2 - wingWidth * 0.8f) - backgroundOffset, wingWidth, wingWidth * 1.5f);
+
+
+    /* END - Scene 4 Butterfly */
+  } else if (backgroundOffset > 13000) {
+    background(255);
   }
-
-  circle(width / 2, height / 2, radius);
-  fill(0);
-  radius += 10; */
 }
 
-public void placementIndicator(float polygonRadius, int npoints, float offsetX) {
-  float centerX = width / 2;
-  float centerY = height / 2;
 
-  polygon(centerX + offsetX, centerY + polygonRadius * 2.75f, polygonRadius * 0.8f, npoints);
-  polygon(centerX + offsetX * 0.9f, centerY + polygonRadius * 1.6f, polygonRadius, npoints);
-  polygon(centerX + offsetX * 0.7f, centerY, polygonRadius, npoints);
-  polygon(centerX + offsetX * 0.3f, centerY - polygonRadius * 1.6f, polygonRadius, npoints);
-  head(centerX, centerY, polygonRadius, 8);
+public void bug(float x, float y, float scale) {
+  PShape leftUpperLeg = bugLeg(scale, false);
+  PShape leftMiddleLeg = bugLeg(scale, false);
+  PShape leftLowerLeg = bugLeg(scale, false);
+  PShape rightUpperLeg = bugLeg(scale, true);
+  PShape rightMiddleLeg = bugLeg(scale, true);
+  PShape rightLowerLeg = bugLeg(scale, true);
+
+  pushMatrix();
+
+  translate(x, y);
+  polygon(60 * scale, 40 * scale , 40 * scale, 6);
+
+  pushMatrix();
+  leftUpperLeg.translate(5 * scale, 0);
+  shape(leftUpperLeg);
+  popMatrix();
+
+  pushMatrix();
+  leftMiddleLeg.translate(0, 20 * scale);
+  shape(leftMiddleLeg);
+  popMatrix();
+
+  pushMatrix();
+  leftLowerLeg.translate(5 * scale, 45 * scale);
+  shape(leftLowerLeg);
+  popMatrix();
+
+  pushMatrix();
+  rightUpperLeg.translate(85 * scale, 0);
+  shape(rightUpperLeg);
+  popMatrix();
+
+  pushMatrix();
+  rightMiddleLeg.translate(90 * scale, 20 * scale);
+  shape(rightMiddleLeg);
+  popMatrix();
+
+  pushMatrix();
+  rightLowerLeg.translate(85 * scale, 45 * scale);
+  shape(rightLowerLeg);
+  popMatrix();
+
+  popMatrix();
+}
+
+public void placementIndicator(float x, float y, float polygonRadius, int npoints, float offsetX) {
+  polygon(x + offsetX, y + polygonRadius * 2.75f, polygonRadius * 0.8f, npoints);
+  polygon(x + offsetX * 0.9f, y + polygonRadius * 1.6f, polygonRadius, npoints);
+  polygon(x + offsetX * 0.7f, y, polygonRadius, npoints);
+  polygon(x + offsetX * 0.3f, y - polygonRadius * 1.6f, polygonRadius, npoints);
+  head(x, y, polygonRadius, 8);
 }
 
 public void polygon(float x, float y, float radius, int npoints) {
@@ -127,6 +280,33 @@ public PShape antenna(float scale) {
   antenna.endShape();
 
   return antenna;
+}
+
+public PShape bugLeg(float scale, boolean mirrored) {
+  PShape bugLeg = createShape();
+  bugLeg.beginShape();
+  bugLeg.fill(255);
+  bugLeg.stroke(255);
+
+  if (mirrored == true) {
+    bugLeg.vertex(0, 20);
+    bugLeg.vertex(15, 20);
+    bugLeg.vertex(30, 5);
+    bugLeg.vertex(30, 0);
+    bugLeg.vertex(15, 15);
+    bugLeg.vertex(0, 15);
+  } else {
+    bugLeg.vertex(0, 0);
+    bugLeg.vertex(15, 15);
+    bugLeg.vertex(30, 15);
+    bugLeg.vertex(30, 20);
+    bugLeg.vertex(15, 20);
+    bugLeg.vertex(0, 5);
+  }
+
+  bugLeg.endShape(CLOSE);
+
+  return bugLeg;
 }
   public void settings() {  fullScreen(); }
   static public void main(String[] passedArgs) {
