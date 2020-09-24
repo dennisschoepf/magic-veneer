@@ -7,6 +7,7 @@ boolean cameIntoThreshhold = false;
 PShape branch;
 PShape leftWing;
 PShape rightWing;
+ArrayList<PShape> flyOverObjects = new ArrayList<PShape>();
 float velocity = 6;
 float backgroundOffset = 0;
 float placementIndicatorOffsetX = 0;
@@ -17,6 +18,9 @@ String cocoonAnimationDirection = "close";
 boolean cocoonAnimationFinished = false;
 float wingOpacity = 0;
 float treeOffset = 0;
+float wingWidth = 100;
+boolean wingsSpread = false;
+String wingDirection = "smaller";
 
 void setup() {
   /* Set up screen */
@@ -29,17 +33,24 @@ void setup() {
   leftWing = loadShape("leftwing.svg");
   rightWing = loadShape("rightwing.svg");
 
+  /* Spawn random objects the butterfly can fly over */
+  for (int i = 0; i < 40; i++) {
+    float x = random(5, width / 10 - 5) * 10;
+    float y = random(4800, 12000);
+    float radius = random(1, 10) * 25;
+    PShape object = createShape(ELLIPSE, x, -y, radius, radius);
+    object.setFill(color(150, 150, 150));
+    object.setStroke(color(150, 150, 150));
+    flyOverObjects.add(object);
+  }
+
+
   /* Set up communication with arduino
   String portName = Serial.list()[Serial.list().length - 1]; //change index to match your port
   arduinoPort = new Serial(this, portName, 9600); */
 }
 
 void draw() {
-  background(255);
-  translate(0, backgroundOffset);
-  backgroundOffset = backgroundOffset + velocity;
-  println(backgroundOffset);
-
   /* if ( arduinoPort.available() > 0)  {
     String rec = arduinoPort.readStringUntil('\n');
     if (rec != null) {
@@ -52,7 +63,22 @@ void draw() {
     }
   }*/
 
+  // Set up fill and let background move
+  background(255);
+  translate(0, backgroundOffset);
+
+  // TODO: Only start to move background as soon as second sensor is triggered
+  backgroundOffset = backgroundOffset + velocity;
+  println(backgroundOffset);
+
+  // Draw fly-over objects
+  for (int i = 0; i < flyOverObjects.size(); i++) {
+    PShape object = flyOverObjects.get(i);
+    shape(object);
+  }
+
   /* START - Create and animate placementIndicator */
+  // TODO: Trigger when first sensor is actuated
   placementIndicator(width / 2, (height / 2) - backgroundOffset ,80, 8, placementIndicatorOffsetX);
 
   if (placementIndicatorAnimationCounter < 5) {
@@ -86,8 +112,7 @@ void draw() {
     /* START - Scene 2 Crawling on branch */
     shape(branch, 0, -3200, width, width);
     /* END - Scene 2 Crawling on branch */
-  }
-  if (backgroundOffset > 2450 && backgroundOffset < 4400) {
+  } else if (backgroundOffset > 2450 && backgroundOffset < 4400) {
     if (cocoonAnimationFinished == false) {
       if (cocoonAnimationDirection == "close" && cocoonOpenDegrees < 165) {
         cocoonOpenDegrees++;
@@ -111,16 +136,35 @@ void draw() {
 
     // 3. Let tree move again
     /* END - Scene 3 Cocooning */
-  } else if (backgroundOffset > 4400) {
+  } else if (backgroundOffset > 4400 && backgroundOffset < 13000) {
     shape(branch, 0, -3200 - (backgroundOffset - 2450) + treeOffset, width, width);
     treeOffset = treeOffset + velocity;
     /* START - Scene 4 Butterfly */
-    shape(leftWing, width / 2 - 540, (height / 2 - 500 * 0.8) - backgroundOffset, 500, 500 * 1.5);
-    shape(rightWing, width / 2 + 40, (height / 2 - 500 * 0.8) - backgroundOffset, 500, 500 * 1.5);
 
-    // 4. Fly and move tree downwards again
+    if (wingWidth < 500 && wingsSpread == false) {
+      wingDirection = "bigger";
+    } else if (wingWidth >= 500 && wingsSpread == false)  {
+      wingWidth = 500;
+      wingsSpread = true;
+    } else if (wingsSpread == true && wingWidth < 450) {
+      wingDirection = "bigger";
+    } else if (wingsSpread == true && wingWidth >= 500) {
+      wingDirection = "smaller";
+    }
+
+    if (wingDirection == "smaller") {
+      wingWidth -= 3;
+    } else if (wingDirection == "bigger") {
+      wingWidth += 3;
+    }
+
+    shape(leftWing, width / 2 - wingWidth - 20, (height / 2 - wingWidth * 0.8) - backgroundOffset, wingWidth, wingWidth * 1.5);
+    shape(rightWing, width / 2 + 20, (height / 2 - wingWidth * 0.8) - backgroundOffset, wingWidth, wingWidth * 1.5);
+
 
     /* END - Scene 4 Butterfly */
+  } else if (backgroundOffset > 13000) {
+    background(0);
   }
 }
 
