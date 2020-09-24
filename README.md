@@ -4,4 +4,4 @@ Token based interaction with a translucent veneer countertop. This prototype was
 
 ## Warning
 
-Processing code should be rewritten, when proceeding with that prototype. As-is it just is a PoC.
+Processing code should be rewritten if prototype is to be looked at further. As-is it just is a PoC.
