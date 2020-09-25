@@ -3,6 +3,7 @@ import processing.serial.*;
 Serial arduinoPort;
 String receivedMessage;
 boolean cameIntoThreshhold = false;
+boolean objectPlacedDown = false;
 
 PShape branch;
 PShape leftWing;
@@ -27,7 +28,6 @@ void setup() {
   fullScreen();
   background(0);
 
-
   /* Load external files */
   branch = loadShape("branch.svg");
   leftWing = loadShape("leftwing.svg");
@@ -44,32 +44,41 @@ void setup() {
     flyOverObjects.add(object);
   }
 
-
-  /* Set up communication with arduino
+  /* Set up communication with arduino */
   String portName = Serial.list()[Serial.list().length - 1]; //change index to match your port
-  arduinoPort = new Serial(this, portName, 9600); */
+  arduinoPort = new Serial(this, portName, 9600);
 }
 
 void draw() {
-  /* if ( arduinoPort.available() > 0)  {
+  if ( arduinoPort.available() > 0)  {
     String rec = arduinoPort.readStringUntil('\n');
     if (rec != null) {
       receivedMessage = rec;
     }
 
     // Check for specific events and act upon them
-    if (receivedMessage != null && receivedMessage.contains("isWithinThreshhold")) {
-      cameIntoThreshhold = true;
+    if (receivedMessage != null) {
+      if (receivedMessage.contains("indicatePlacement")) {
+        cameIntoThreshhold = true;
+      } else {
+         cameIntoThreshhold = false;
+      }
+
+      if (receivedMessage.contains("startAnimation")) {
+        objectPlacedDown = true;
+      } else {
+        objectPlacedDown = false;
+      }
     }
-  }*/
+  }
 
   // Set up fill and let background move
   background(0);
   translate(0, backgroundOffset - 100);
 
-  // TODO: Only start to move background as soon as second sensor is triggered
-  backgroundOffset = backgroundOffset + velocity;
-  println(backgroundOffset);
+  if (objectPlacedDown == true) {
+    backgroundOffset = backgroundOffset + velocity;
+  }
 
   // Draw fly-over objects
   for (int i = 0; i < flyOverObjects.size(); i++) {
@@ -77,28 +86,29 @@ void draw() {
     shape(object);
   }
 
-  /* START - Create and animate placementIndicator */
-  // TODO: Trigger when first sensor is actuated
-  placementIndicator(width / 2+ 150, (height / 2) - backgroundOffset ,130, 8, placementIndicatorOffsetX);
+  if (cameIntoThreshhold == true) {
+    /* START - Create and animate placementIndicator */
+    placementIndicator(width / 2, (height / 2) + 220 - backgroundOffset ,110, 8, placementIndicatorOffsetX);
 
-  if (placementIndicatorAnimationCounter < 5) {
-    if (placementIndicatorAnimationDirection == "right" && placementIndicatorOffsetX < 30) {
-      placementIndicatorOffsetX += 2;
-    } else if (placementIndicatorAnimationDirection == "right" && placementIndicatorOffsetX <= 30) {
-      placementIndicatorAnimationDirection = "left";
-      placementIndicatorOffsetX -= 2;
-      placementIndicatorAnimationCounter++;
-    } else if (placementIndicatorAnimationDirection == "left" && placementIndicatorOffsetX >= -30) {
-      placementIndicatorOffsetX -= 2;
-    } else if (placementIndicatorAnimationDirection == "left" && placementIndicatorOffsetX <= -30) {
-      placementIndicatorAnimationDirection = "right";
-      placementIndicatorOffsetX += 2;
-      placementIndicatorAnimationCounter++;
+    if (placementIndicatorAnimationCounter < 5) {
+      if (placementIndicatorAnimationDirection == "right" && placementIndicatorOffsetX < 30) {
+        placementIndicatorOffsetX += 2;
+      } else if (placementIndicatorAnimationDirection == "right" && placementIndicatorOffsetX <= 30) {
+        placementIndicatorAnimationDirection = "left";
+        placementIndicatorOffsetX -= 2;
+        placementIndicatorAnimationCounter++;
+      } else if (placementIndicatorAnimationDirection == "left" && placementIndicatorOffsetX >= -30) {
+        placementIndicatorOffsetX -= 2;
+      } else if (placementIndicatorAnimationDirection == "left" && placementIndicatorOffsetX <= -30) {
+        placementIndicatorAnimationDirection = "right";
+        placementIndicatorOffsetX += 2;
+        placementIndicatorAnimationCounter++;
+      }
+    } else {
+      placementIndicatorOffsetX = 0;
     }
-  } else {
-    placementIndicatorOffsetX = 0;
+    /* END - Create and animate placementIndicator */
   }
-  /* END - Create and animate placementIndicator */
 
   /* START - Scene 1 Bugs going by */
   bug(100, -100, 1);
@@ -110,7 +120,7 @@ void draw() {
 
   if (backgroundOffset < 2450) {
     /* START - Scene 2 Crawling on branch */
-    shape(branch, 0, -3200, width, width);
+    shape(branch, 0, -2980, width, width);
     /* END - Scene 2 Crawling on branch */
   } else if (backgroundOffset > 2450 && backgroundOffset < 4400) {
     if (cocoonAnimationFinished == false) {
@@ -128,10 +138,10 @@ void draw() {
 
       fill(255);
       noStroke();
-      arc(width / 2 + 150, -1800 - (backgroundOffset - 2450), 500, 1100, radians(260 - cocoonOpenDegrees), radians(280 + cocoonOpenDegrees), PIE);
+      arc(width / 2, -1580 - (backgroundOffset - 2450), 500, 1100, radians(260 - cocoonOpenDegrees), radians(280 + cocoonOpenDegrees), PIE);
 
       print("Tree position: ");
-      shape(branch, 0, -3200 - (backgroundOffset - 2450), width, width);
+      shape(branch, 0, -2980 - (backgroundOffset - 2450), width, width);
     }
 
     // 3. Let tree move again
@@ -158,8 +168,8 @@ void draw() {
       wingWidth += 4;
     }
 
-    shape(leftWing, width / 2 - wingWidth + 85, (height / 2 - wingWidth * 0.8) - backgroundOffset, wingWidth, wingWidth * 1.5);
-    shape(rightWing, width / 2 + 215, (height / 2 - wingWidth * 0.8) - backgroundOffset, wingWidth, wingWidth * 1.5);
+    shape(leftWing, width / 2 - wingWidth - 65, (height / 2 - wingWidth * 0.8 + 220) - backgroundOffset, wingWidth, wingWidth * 1.5);
+    shape(rightWing, width / 2 + 65, (height / 2 - wingWidth * 0.8 + 220) - backgroundOffset, wingWidth, wingWidth * 1.5);
 
 
     /* END - Scene 4 Butterfly */

@@ -2,32 +2,25 @@
 #include <SharpIR.h>
 
 SharpIR sensorProx(SharpIR::GP2Y0A02YK0F, A0);
-SharpIR sensorDown(SharpIR::GP2Y0A02YK0F, A1);
+SharpIR sensorDown(SharpIR::GP2Y0A02YK0F, A7);
 
 void setup()
 {
   Serial.begin(9600);
   pinMode(A0, INPUT);
-  pinMode(A1, INPUT);
+  pinMode(A7, INPUT);
 }
 
 void loop()
 {
   int distanceProx = sensorProx.getDistance();
-  int distanceDown = sensorDown.getDistance();
-  Serial.print("Proximity");
-  Serial.println(distanceProx);
-  Serial.print("Down");
-  Serial.println(distanceDown);
-  delay(100);
+  // int distanceDown = sensorDown.getDistance();
+  delay(250);
 
-  if (distanceProx < 40)
+  if (distanceProx < 30)
   {
-    Serial.println("Through first barrier");
+    Serial.println("indicatePlacement");
+    delay(2000);
+    Serial.println("startAnimation");
   }
-  if (distanceDown < 35)
-  {
-    Serial.println("Through second barrier");
-  }
-  delay(100);
 }
