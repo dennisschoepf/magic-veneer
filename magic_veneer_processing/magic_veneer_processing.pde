@@ -140,7 +140,6 @@ void draw() {
       noStroke();
       arc(width / 2, -1580 - (backgroundOffset - 2450), 500, 1100, radians(260 - cocoonOpenDegrees), radians(280 + cocoonOpenDegrees), PIE);
 
-      print("Tree position: ");
       shape(branch, 0, -2980 - (backgroundOffset - 2450), width, width);
     }
 
